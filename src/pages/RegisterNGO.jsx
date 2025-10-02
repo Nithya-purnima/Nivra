@@ -32,21 +32,30 @@ export default function RegisterNGO() {
 
     try {
       const res = await api.post("/register/ngo", data, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { 
+          "Content-Type": "multipart/form-data",
+          // Remove any default content-type headers
+          common: {
+            "Content-Type": undefined
+          }
+        },
+        withCredentials: true
       });
-      alert(res.data);
-      // reset form
-      setForm({
-        orgName: "",
-        email: "",
-        phone: "",
-        address: "",
-        password: "",
-        certificate: null
-      });
+      
+      if (res.data) {
+        alert("Registration successful!");
+        setForm({
+          orgName: "",
+          email: "",
+          phone: "",
+          address: "",
+          password: "",
+          certificate: null
+        });
+      }
     } catch (err) {
       console.error(err);
-      alert(err.response?.data || "Registration failed");
+      alert(err.response?.data?.message || "Registration failed. Please check your connection and try again.");
     }
   };
 

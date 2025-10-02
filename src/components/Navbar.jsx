@@ -22,9 +22,9 @@ export default function Navbar() {
                 Register
               </a>
               <ul className="dropdown-menu" aria-labelledby="registerDropdown">
-                <li><Link className="dropdown-item" to="/register-consumer">Consumer</Link></li>
-                <li><Link className="dropdown-item" to="/register-ngo">NGO</Link></li>
-                <li><Link className="dropdown-item" to="/register-seller">Seller</Link></li>
+                <li><Link className="dropdown-item" to="/register/consumer">Consumer</Link></li>
+                <li><Link className="dropdown-item" to="/register/ngo">NGO</Link></li>
+                <li><Link className="dropdown-item" to="/register/seller">Seller</Link></li>
               </ul>
             </li>
 
@@ -41,10 +41,17 @@ export default function Navbar() {
                 Login
               </a>
               <ul className="dropdown-menu" aria-labelledby="loginDropdown">
-                <li><Link className="dropdown-item" to="/login-buyer">Buyer</Link></li>
-                <li><Link className="dropdown-item" to="/login-seller">Seller</Link></li>
+                <li><Link className="dropdown-item" to="/login/buyer">Buyer</Link></li>
+                <li><Link className="dropdown-item" to="/login/seller">Seller</Link></li>
               </ul>
             </li>
+
+            {/* Show this link only if user is logged in as seller */}
+            {localStorage.getItem('userType') === 'seller' && (
+              <li className="nav-item">
+                <Link className="nav-link" to="/products/new">Add Product</Link>
+              </li>
+            )}
 
           </ul>
         </div>

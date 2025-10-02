@@ -14,7 +14,8 @@ export default function LoginSeller() {
       const res = await api.post("/login/seller", form);
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("userType", "seller");
-      navigate("/product-form");
+      localStorage.setItem("userId", res.data.sellerId); // Store the seller's ID
+      navigate("/products/new"); // Redirect to product form after login
     } catch (err) {
       alert(err.response?.data || "Login failed");
     }

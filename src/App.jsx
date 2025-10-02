@@ -27,33 +27,24 @@ export default function App() {
     <Router>
       <Navbar />
       <Routes>
-        {/* Registration */}
-        <Route path="/register-consumer" element={<RegisterConsumer />} />
-        <Route path="/register-ngo" element={<RegisterNGO />} />
-        <Route path="/register-seller" element={<RegisterSeller />} />
-
-        {/* Login */}
-        <Route path="/login-buyer" element={<LoginBuyer />} />
-        <Route path="/login-seller" element={<LoginSeller />} />
-
-        {/* Products */}
-        <Route
-          path="/products"
-          element={
-            <PrivateRoute role="consumer">
-              <ProductList />
-            </PrivateRoute>
-          }
-        />
-
-        {/* Seller Product Upload */}
-        <Route
-          path="/product-form"
+        {/* Registration Routes - matching /api/register/* endpoints */}
+        <Route path="/register/consumer" element={<RegisterConsumer />} />
+        <Route path="/register/ngo" element={<RegisterNGO />} />
+        <Route path="/register/seller" element={<RegisterSeller />} />
+        
+        {/* Login Routes - matching /api/login/* endpoints */}
+        <Route path="/login/buyer" element={<LoginBuyer />} />
+        <Route path="/login/seller" element={<LoginSeller />} />
+        
+        {/* Products Routes - matching /api/products endpoints */}
+        <Route path="/products" element={<ProductList />} />
+        <Route 
+          path="/products/new" 
           element={
             <PrivateRoute role="seller">
               <ProductForm />
             </PrivateRoute>
-          }
+          } 
         />
 
         {/* Home redirect */}
