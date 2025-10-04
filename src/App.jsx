@@ -8,7 +8,10 @@ import RegisterSeller from "./pages/RegisterSeller";
 import LoginBuyer from "./pages/LoginBuyer";
 import LoginSeller from "./pages/LoginSeller";
 import ProductList from "./pages/ProductList";
+import ProductDetail from "./pages/ProductDetail";
 import ProductForm from "./components/ProductForm";
+import WishlistPage from "./pages/WishlistPage";
+import CartPage from "./pages/CartPage";
 
 // Simple authentication check
 const PrivateRoute = ({ children, role }) => {
@@ -27,6 +30,9 @@ export default function App() {
     <Router>
       <Navbar />
       <Routes>
+        {/* Root redirect to products */}
+        <Route path="/" element={<Navigate to="/products" replace />} />
+
         {/* Registration Routes - matching /api/register/* endpoints */}
         <Route path="/register/consumer" element={<RegisterConsumer />} />
         <Route path="/register/ngo" element={<RegisterNGO />} />
@@ -38,6 +44,7 @@ export default function App() {
         
         {/* Products Routes - matching /api/products endpoints */}
         <Route path="/products" element={<ProductList />} />
+        <Route path="/products/:id" element={<ProductDetail />} />
         <Route 
           path="/products/new" 
           element={
@@ -45,6 +52,24 @@ export default function App() {
               <ProductForm />
             </PrivateRoute>
           } 
+        />
+        
+        {/* Wishlist and Cart Routes */}
+        <Route 
+          path="/wishlist" 
+          element={
+            <PrivateRoute>
+              <WishlistPage />
+            </PrivateRoute>
+          }
+        />
+        <Route 
+          path="/cart" 
+          element={
+            <PrivateRoute>
+              <CartPage />
+            </PrivateRoute>
+          }
         />
 
         {/* Home redirect */}

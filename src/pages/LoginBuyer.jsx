@@ -12,8 +12,12 @@ export default function LoginBuyer() {
     e.preventDefault();
     try {
       const res = await api.post("/login/buyer", form);
+
+      // Store user info in localStorage
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("userId", res.data.userId); // now defined
       localStorage.setItem("userType", res.data.userType);
+
       navigate("/products");
     } catch (err) {
       alert(err.response?.data || "Login failed");
