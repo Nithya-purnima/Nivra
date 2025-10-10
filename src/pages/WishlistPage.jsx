@@ -70,11 +70,11 @@ export default function WishlistPage() {
                 <img
                   src={`http://localhost:8080/api/files/${item.imagePath}`}
                   className="card-img-top"
-                  alt={item.name}
+                  alt={item.title}
                   style={{ height: "200px", objectFit: "cover" }}
                 />
                 <div className="card-body d-flex flex-column">
-                  <h5 className="card-title">{item.name}</h5>
+                  <h5 className="card-title">{item.title}</h5>
                   <p className="card-text">{item.description}</p>
                   <div className="mt-auto">
                     <p className="card-text">

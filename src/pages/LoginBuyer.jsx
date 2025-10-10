@@ -2,7 +2,7 @@ import { useState } from "react";
 import api from "../api/api";
 import { useNavigate } from "react-router-dom";
 
-export default function LoginBuyer() {
+function LoginBuyer() {
   const [form, setForm] = useState({ email: "", password: "" });
   const navigate = useNavigate();
 
@@ -12,15 +12,20 @@ export default function LoginBuyer() {
     e.preventDefault();
     try {
       const res = await api.post("/login/buyer", form);
-
-      // Store user info in localStorage
       localStorage.setItem("token", res.data.token);
-      localStorage.setItem("userId", res.data.userId); // now defined
-      localStorage.setItem("userType", res.data.userType);
-
+      localStorage.setItem("userId", res.data.userId);
+      localStorage.setItem("userType", res.data.userType || "consumer");
+      localStorage.setItem("userEmail", form.email);
+      localStorage.setItem("name", res.data.name || "Buyer");
       navigate("/products");
     } catch (err) {
-      alert(err.response?.data || "Login failed");
+      if (err.response?.status === 404) {
+        alert(err.response.data.message || "User not found");
+      } else if (err.response?.status === 401) {
+        alert(err.response.data.message || "Incorrect password");
+      } else {
+        alert("Login failed. Please try again.");
+      }
     }
   };
 
@@ -34,8 +39,22 @@ export default function LoginBuyer() {
         <div className="mb-3">
           <input type="password" name="password" className="form-control" placeholder="Password" onChange={handleChange} required />
         </div>
-        <button className="btn btn-primary w-100">Login</button>
+        <button 
+          className="btn btn-primary w-100"
+          style={{
+            backgroundColor: '#008080',
+            border: 'none',
+            padding: '12px',
+            fontSize: '1rem',
+            borderRadius: '8px',
+            transition: 'background-color 0.2s ease'
+          }}
+        >
+          Login
+        </button>
       </form>
     </div>
   );
 }
+
+export default LoginBuyer;

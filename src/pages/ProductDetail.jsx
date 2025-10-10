@@ -9,10 +9,9 @@ export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Get userId and type from localStorage
   const userIdStr = localStorage.getItem('userId');
   const userType = localStorage.getItem('userType');
-  const userId = userIdStr ? parseInt(userIdStr) : null; // Convert to number
+  const userId = userIdStr ? parseInt(userIdStr) : null;
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -25,7 +24,6 @@ export default function ProductDetail() {
         setLoading(false);
       }
     };
-
     fetchProduct();
   }, [id]);
 
@@ -37,13 +35,14 @@ export default function ProductDetail() {
     }
 
     try {
-      const response = await api.post(`/products/${id}/wishlist`, null, {
-        params: { userId }
-      });
-      alert(response.data);
+      await api.post(`/wishlist/add/${id}?userId=${userId}`);
+      alert('Product added to wishlist successfully');
     } catch (error) {
-      console.error('Wishlist error:', error.response?.data || error);
-      alert('Failed to add to wishlist');
+      if (error.response?.data?.startsWith('Error: Product already in wishlist')) {
+        alert('This product is already in your wishlist');
+      } else {
+        alert(error.response?.data || 'Failed to add to wishlist');
+      }
     }
   };
 
@@ -55,25 +54,23 @@ export default function ProductDetail() {
     }
 
     try {
-      // Check if item already exists in cart
       const cartResponse = await api.get(`/cart?userId=${userId}`);
       const existingItem = cartResponse.data.find(item => item.product.id === parseInt(id));
       
       if (existingItem) {
-        // Update quantity instead of adding new item
         await api.put(`/cart/update/${id}?userId=${userId}&quantity=${existingItem.quantity + quantity}`);
         alert('Updated quantity in cart');
       } else {
-        // Add new item to cart
         await api.post(`/cart/add/${id}?userId=${userId}&quantity=${quantity}`);
         alert('Added to cart successfully');
       }
     } catch (error) {
       console.error('Cart error:', error.response?.data || error);
-      alert('Failed to add to cart');
+      alert('Failed to access cart');
     }
   };
 
+  // ✅ FIXED: handleRequest() rewritten to use /api/requests
   const handleRequest = async () => {
     if (!userId) {
       alert('Please login first');
@@ -82,14 +79,23 @@ export default function ProductDetail() {
     }
 
     try {
-      // You can implement a backend request endpoint for this
-      const response = await api.post(`/products/${id}/request`, null, {
-        params: { userId }
+      // Make POST request to backend
+      const response = await api.post('/requests', {
+        consumerId: userId,
+        productId: product.id
       });
-      alert(response.data || 'Request sent successfully!');
+
+      alert('Product requested successfully!');
+
+      // Ask if buyer wants to chat with seller
+      if (window.confirm('Would you like to chat with the seller?')) {
+        navigate(`/chat/${userId}/${product.seller.id}`);
+      }
+
     } catch (error) {
-      console.error('Request error:', error.response?.data || error);
-      alert('Failed to send request');
+      const errorMsg = error.response?.data?.message || error.response?.data || error.message;
+      console.error("API error:", errorMsg);
+      alert(String(errorMsg));
     }
   };
 
@@ -131,15 +137,34 @@ export default function ProductDetail() {
           <div className="d-grid gap-2">
             {userType === 'consumer' && (
               <>
-                <button className="btn btn-outline-primary" onClick={handleAddToWishlist}>
-                  Add to Wishlist
+                <div className="row mb-3">
+                  <div className="col">
+                    <button className="btn btn-outline-primary w-100" onClick={handleAddToWishlist}>
+                      <i className="bi bi-heart"></i> Add to Wishlist
+                    </button>
+                  </div>
+                  <div className="col">
+                    <button className="btn btn-primary w-100" onClick={handleAddToCart}>
+                      <i className="bi bi-cart-plus"></i> Add to Cart
+                    </button>
+                  </div>
+                </div>
+
+                <button 
+                  className="btn btn-success w-100 mb-2" 
+                  onClick={handleRequest}
+                >
+                  <i className="bi bi-chat-dots"></i> Request Product & Chat with Seller
                 </button>
-                <button className="btn btn-primary" onClick={handleAddToCart}>
-                  Add to Cart
-                </button>
-                <button className="btn btn-success" onClick={handleRequest}>
-                  Request Product
-                </button>
+
+                {product.seller && (
+                  <button 
+                    className="btn btn-outline-secondary w-100"
+                    onClick={() => navigate(`/chat/${userId}/${product.seller.id}`)}
+                  >
+                    <i className="bi bi-chat"></i> Chat with Seller
+                  </button>
+                )}
               </>
             )}
             {!userType && (

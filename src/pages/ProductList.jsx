@@ -66,11 +66,11 @@ export default function ProductList() {
               <img
                 src={`http://localhost:8080/api/files/${p.imagePath}`}
                 className="card-img-top"
-                alt={p.name}
+                alt={p.title}
                 style={{ height: "200px", objectFit: "cover" }}
               />
               <div className="card-body d-flex flex-column">
-                <h5 className="card-title">{p.name}</h5>
+                <h5 className="card-title">{p.title}</h5>
                 <p className="card-text">{p.description}</p>
                 <div className="mt-auto">
                   <p className="card-text">
@@ -81,10 +81,17 @@ export default function ProductList() {
                   </p>
                   <div className="d-flex flex-column gap-2">
                     <button 
-                      className="btn btn-primary w-100"
+                      className="btn w-100"
                       onClick={(e) => {
                         e.stopPropagation();
                         navigate(`/products/${p.id}`);
+                      }}
+                      style={{
+                        backgroundColor: '#008080',
+                        color: '#fff',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px'
                       }}
                     >
                       View Details
