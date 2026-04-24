@@ -1,99 +1,88 @@
 import { useEffect, useState } from "react";
-import api from "../api/api";
+import { toast } from "react-toastify";
 
 export default function WishlistPage() {
-  const [wishlistItems, setWishlistItems] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
 
-  const userId = localStorage.getItem('userId');
+  const userId = localStorage.getItem("userId");
+
+  const fetchWishlist = () => {
+    const saved = localStorage.getItem(`wishlist_${userId}`);
+    setWishlist(saved ? JSON.parse(saved) : []);
+  };
 
   useEffect(() => {
-    const fetchWishlist = async () => {
-      try {
-        const response = await api.get(`/wishlist?userId=${userId}`);
-        setWishlistItems(response.data);
-      } catch (err) {
-        console.error(err);
-        alert("Failed to fetch wishlist items");
-      }
-    };
-
     if (userId) {
       fetchWishlist();
     }
   }, [userId]);
 
-  const removeFromWishlist = async (productId) => {
-    try {
-      await api.delete(`/wishlist/remove/${productId}?userId=${userId}`);
-      setWishlistItems(wishlistItems.filter(item => item.id !== productId));
-      alert("Product removed from wishlist");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to remove product from wishlist");
-    }
+  const removeItem = (productId) => {
+    const updatedWishlist = wishlist.filter(
+      (item) => item.productId !== productId
+    );
+
+    setWishlist(updatedWishlist);
+    localStorage.setItem(
+      `wishlist_${userId}`,
+      JSON.stringify(updatedWishlist)
+    );
+
+    toast.success("Item removed from wishlist");
   };
 
-  const addToCart = async (productId) => {
-    try {
-      // Check if item already exists in cart
-      const cartResponse = await api.get(`/cart?userId=${userId}`);
-      const existingItem = cartResponse.data.find(item => item.product.id === productId);
-      
-      if (existingItem) {
-        // Update quantity instead of adding new item
-        await api.put(`/cart/update/${productId}?userId=${userId}&quantity=${existingItem.quantity + 1}`);
-        alert('Updated quantity in cart');
-      } else {
-        // Add new item to cart
-        await api.post(`/cart/add/${productId}?userId=${userId}&quantity=1`);
-        alert('Added to cart successfully');
-      }
-      
-      // Remove from wishlist after successful cart operation
-      await removeFromWishlist(productId);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to add product to cart");
+  const clearWishlist = () => {
+    const confirmClear = window.confirm("Clear entire wishlist?");
+
+    if (confirmClear) {
+      setWishlist([]);
+      localStorage.removeItem(`wishlist_${userId}`);
+
+      toast.info("Wishlist cleared");
     }
   };
 
   return (
-    <div className="container mt-4">
-      <h2 className="mb-4">My Wishlist</h2>
-      {wishlistItems.length === 0 ? (
-        <p>Your wishlist is empty</p>
+    <div className="container mt-5">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Wishlist</h2>
+
+        {wishlist.length > 0 && (
+          <button
+            className="btn btn-outline-danger"
+            onClick={clearWishlist}
+          >
+            Clear All
+          </button>
+        )}
+      </div>
+
+      {wishlist.length === 0 ? (
+        <div className="text-center py-5">
+          <i
+            className="bi bi-heart"
+            style={{ fontSize: "4rem", color: "#ccc" }}
+          ></i>
+          <p className="mt-3 text-muted">No items in wishlist</p>
+        </div>
       ) : (
         <div className="row">
-          {wishlistItems.map((item) => (
-            <div className="col-md-4 mb-3" key={item.id}>
-              <div className="card h-100">
-                <img
-                  src={`http://localhost:8080/api/files/${item.imagePath}`}
-                  className="card-img-top"
-                  alt={item.title}
-                  style={{ height: "200px", objectFit: "cover" }}
-                />
+          {wishlist.map((item) => (
+            <div key={item.productId} className="col-md-6 col-lg-4 mb-4">
+              <div className="card h-100 shadow-sm">
                 <div className="card-body d-flex flex-column">
-                  <h5 className="card-title">{item.title}</h5>
-                  <p className="card-text">{item.description}</p>
+                  <h5 className="card-title">{item.name}</h5>
+                  <p className="card-text text-success fw-bold">
+                    ₹{item.price}
+                  </p>
+
                   <div className="mt-auto">
-                    <p className="card-text">
-                      <strong>Price: </strong>₹{item.price}
-                    </p>
-                    <div className="d-flex gap-2">
-                      <button
-                        className="btn btn-success flex-grow-1"
-                        onClick={() => addToCart(item.id)}
-                      >
-                        Add to Cart
-                      </button>
-                      <button
-                        className="btn btn-danger flex-grow-1"
-                        onClick={() => removeFromWishlist(item.id)}
-                      >
-                        Remove
-                      </button>
-                    </div>
+                    <button
+                      className="btn btn-danger w-100"
+                      onClick={() => removeItem(item.productId)}
+                    >
+                      <i className="bi bi-trash"></i> Remove
+                    </button>
                   </div>
                 </div>
               </div>

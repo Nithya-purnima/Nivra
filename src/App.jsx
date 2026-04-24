@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Navbar from "./components/Navbar";
 
-// Pages
 import LandingPage from "./pages/LandingPage";
 import RegisterConsumer from "./pages/RegisterConsumer";
 import RegisterNGO from "./pages/RegisterNGO";
@@ -13,18 +14,19 @@ import ProductDetail from "./pages/ProductDetail";
 import ProductForm from "./components/ProductForm";
 import WishlistPage from "./pages/WishlistPage";
 import CartPage from "./pages/CartPage";
-import AdminConsumerVerification from "./pages/AdminConsumerVerification";
-import AdminNGOVerification from "./pages/AdminNGOVerification";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 import SellerRequests from "./pages/SellerRequests";
 import SellerChats from "./pages/SellerChats";
+import BuyerChats from "./pages/BuyerChats";
 import Chat from "./pages/Chat.jsx";
 
-// ✅ Authentication check
+// Simple auth guard — only checks userId, no JWT
 const PrivateRoute = ({ children, role }) => {
-  const token = localStorage.getItem("token");
-  const userType = localStorage.getItem("userType");
+  const userId = localStorage.getItem("userId");
+  const userType = localStorage.getItem("userType"); // "buyer" or "seller"
 
-  if (!token) return <Navigate to="/" />;
+  if (!userId) return <Navigate to="/" />;
   if (role && role !== userType) return <Navigate to="/" />;
 
   return children;
@@ -34,8 +36,9 @@ export default function App() {
   return (
     <Router>
       <Navbar />
+      <ToastContainer position="top-right" autoClose={3000} />
       <Routes>
-        {/* Public Routes */}
+        {/* Public */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/register/consumer" element={<RegisterConsumer />} />
         <Route path="/register/ngo" element={<RegisterNGO />} />
@@ -43,7 +46,7 @@ export default function App() {
         <Route path="/login/buyer" element={<LoginBuyer />} />
         <Route path="/login/seller" element={<LoginSeller />} />
 
-        {/* Product Routes */}
+        {/* Products */}
         <Route path="/products" element={<ProductList />} />
         <Route path="/products/:id" element={<ProductDetail />} />
         <Route
@@ -55,11 +58,11 @@ export default function App() {
           }
         />
 
-        {/* Wishlist & Cart */}
+        {/* Buyer */}
         <Route
           path="/wishlist"
           element={
-            <PrivateRoute>
+            <PrivateRoute role="buyer">
               <WishlistPage />
             </PrivateRoute>
           }
@@ -67,13 +70,21 @@ export default function App() {
         <Route
           path="/cart"
           element={
-            <PrivateRoute>
+            <PrivateRoute role="buyer">
               <CartPage />
             </PrivateRoute>
           }
         />
+        <Route
+          path="/buyer/chats"
+          element={
+            <PrivateRoute role="buyer">
+              <BuyerChats />
+            </PrivateRoute>
+          }
+        />
 
-        {/* Seller Features */}
+        {/* Seller */}
         <Route
           path="/seller/requests"
           element={
@@ -91,19 +102,19 @@ export default function App() {
           }
         />
 
-       <Route
-         path="/chat/:senderId/:receiverId"
-         element={
-           <PrivateRoute>
-             <Chat />
-           </PrivateRoute>
-         }
-       />
+        {/* Shared chat room — accessible to both buyer and seller */}
+        <Route
+          path="/chat/:conversationId"
+          element={
+            <PrivateRoute>
+              <Chat />
+            </PrivateRoute>
+          }
+        />
 
-
-        {/* Admin Routes */}
-        <Route path="/admin/consumers" element={<AdminConsumerVerification />} />
-        <Route path="/admin/ngos" element={<AdminNGOVerification />} />
+        {/* Admin */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
       </Routes>
     </Router>
   );

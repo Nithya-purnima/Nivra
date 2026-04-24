@@ -90,13 +90,25 @@ export default function LandingPage() {
           margin: "0 auto",
           padding: "0 24px"
         }}>
-          <div style={{ 
-            background: "#fff", 
-            borderRadius: "16px", 
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1)", 
-            overflow: "hidden",
-            cursor: "pointer"
-          }}>
+          <div 
+            onClick={() => navigate("/products?category=Dresses")}
+            style={{ 
+              background: "#fff", 
+              borderRadius: "16px", 
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)", 
+              overflow: "hidden",
+              cursor: "pointer",
+              transition: "transform 0.3s ease, box-shadow 0.3s ease"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-8px)";
+              e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.15)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+            }}
+          >
             <img 
               src={clothes}
               alt="Dresses Category"
@@ -113,13 +125,25 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div style={{ 
-            background: "#fff", 
-            borderRadius: "16px", 
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1)", 
-            overflow: "hidden",
-            cursor: "pointer"
-          }}>
+          <div 
+            onClick={() => navigate("/products?category=Books")}
+            style={{ 
+              background: "#fff", 
+              borderRadius: "16px", 
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)", 
+              overflow: "hidden",
+              cursor: "pointer",
+              transition: "transform 0.3s ease, box-shadow 0.3s ease"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-8px)";
+              e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.15)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+            }}
+          >
             <img 
               src={books}
               alt="Books Category"
@@ -136,13 +160,25 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div style={{ 
-            background: "#fff", 
-            borderRadius: "16px", 
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1)", 
-            overflow: "hidden",
-            cursor: "pointer"
-          }}>
+          <div 
+            onClick={() => navigate("/products?category=Electronics")}
+            style={{ 
+              background: "#fff", 
+              borderRadius: "16px", 
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)", 
+              overflow: "hidden",
+              cursor: "pointer",
+              transition: "transform 0.3s ease, box-shadow 0.3s ease"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-8px)";
+              e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.15)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+            }}
+          >
             <img 
               src={moto}
               alt="Electronics Category"
@@ -159,13 +195,25 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div style={{ 
-            background: "#fff", 
-            borderRadius: "16px", 
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1)", 
-            overflow: "hidden",
-            cursor: "pointer"
-          }}>
+          <div 
+            onClick={() => navigate("/products?category=Furniture")}
+            style={{ 
+              background: "#fff", 
+              borderRadius: "16px", 
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)", 
+              overflow: "hidden",
+              cursor: "pointer",
+              transition: "transform 0.3s ease, box-shadow 0.3s ease"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-8px)";
+              e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.15)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+            }}
+          >
             <img 
               src={table}
               alt="Furniture Category"

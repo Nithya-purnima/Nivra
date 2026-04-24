@@ -1,25 +1,31 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import api from '../api/api';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import api from "../api/api";
 
 export default function ProductDetail() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [cart, setCart] = useState(() => {
+    const saved = localStorage.getItem("cart");
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const userIdStr = localStorage.getItem('userId');
-  const userType = localStorage.getItem('userType');
-  const userId = userIdStr ? parseInt(userIdStr) : null;
+  const userIdRaw = localStorage.getItem("userId");
+  const userId = userIdRaw ? parseInt(userIdRaw) : null;
+  const userType = localStorage.getItem("userType");
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await api.get(`/products/${id}`);
-        setProduct(response.data);
-      } catch (error) {
-        console.error('Error fetching product:', error);
+        const res = await api.get(`/products/${id}`);
+        setProduct(res.data);
+      } catch (err) {
+        console.error("Error fetching product:", err);
       } finally {
         setLoading(false);
       }
@@ -27,152 +33,165 @@ export default function ProductDetail() {
     fetchProduct();
   }, [id]);
 
-  const handleAddToWishlist = async () => {
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [cart]);
+
+  // ✅ FIXED CHAT FUNCTION (IMPORTANT)
+  const startChat = async () => {
     if (!userId) {
-      alert('Please login first');
-      navigate('/login/buyer');
+      toast.warning("Please login first");
+      navigate("/login/buyer");
       return;
     }
 
     try {
-      await api.post(`/wishlist/add/${id}?userId=${userId}`);
-      alert('Product added to wishlist successfully');
-    } catch (error) {
-      if (error.response?.data?.startsWith('Error: Product already in wishlist')) {
-        alert('This product is already in your wishlist');
-      } else {
-        alert(error.response?.data || 'Failed to add to wishlist');
-      }
-    }
-  };
-
-  const handleAddToCart = async () => {
-    if (!userId) {
-      alert('Please login first');
-      navigate('/login/buyer');
-      return;
-    }
-
-    try {
-      const cartResponse = await api.get(`/cart?userId=${userId}`);
-      const existingItem = cartResponse.data.find(item => item.product.id === parseInt(id));
-      
-      if (existingItem) {
-        await api.put(`/cart/update/${id}?userId=${userId}&quantity=${existingItem.quantity + quantity}`);
-        alert('Updated quantity in cart');
-      } else {
-        await api.post(`/cart/add/${id}?userId=${userId}&quantity=${quantity}`);
-        alert('Added to cart successfully');
-      }
-    } catch (error) {
-      console.error('Cart error:', error.response?.data || error);
-      alert('Failed to access cart');
-    }
-  };
-
-  // ✅ FIXED: handleRequest() rewritten to use /api/requests
-  const handleRequest = async () => {
-    if (!userId) {
-      alert('Please login first');
-      navigate('/login/buyer');
-      return;
-    }
-
-    try {
-      // Make POST request to backend
-      const response = await api.post('/requests', {
-        consumerId: userId,
-        productId: product.id
+      const res = await api.post("/conversation", {
+        buyerId: userId,
+        sellerId: product.seller.id,
+        productId: product.id,
       });
 
-      alert('Product requested successfully!');
+      const conversation = res.data;
 
-      // Ask if buyer wants to chat with seller
-      if (window.confirm('Would you like to chat with the seller?')) {
-        navigate(`/chat/${userId}/${product.seller.id}`);
+      navigate(`/chat/${conversation.id}`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to start chat");
+    }
+  };
+
+  const handleAddToCart = () => {
+    if (!userId) {
+      toast.warning("Please login first");
+      navigate("/login/buyer");
+      return;
+    }
+
+    const existing = cart.find((item) => item.productId === product.id);
+
+    let updatedCart;
+    if (existing) {
+      updatedCart = cart.map((item) =>
+        item.productId === product.id
+          ? { ...item, quantity: item.quantity + quantity }
+          : item
+      );
+      toast.info("Cart updated!");
+    } else {
+      updatedCart = [
+        ...cart,
+        {
+          productId: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.image,
+          quantity,
+          sellerId: product.seller?.id,
+        },
+      ];
+      toast.success("Added to cart!");
+    }
+
+    setCart(updatedCart);
+  };
+
+  const handleAddToWishlist = () => {
+    if (!userId) {
+      toast.warning("Please login first");
+      navigate("/login/buyer");
+      return;
+    }
+
+    const saved = localStorage.getItem(`wishlist_${userId}`);
+    const current = saved ? JSON.parse(saved) : [];
+
+    const exists = current.find((i) => i.productId === product.id);
+    if (exists) return toast.info("Already in wishlist");
+
+    const updated = [
+      ...current,
+      {
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+      },
+    ];
+
+    localStorage.setItem(`wishlist_${userId}`, JSON.stringify(updated));
+    toast.success("Added to wishlist!");
+  };
+
+  const handleRequest = async () => {
+    if (!userId) {
+      toast.warning("Please login first");
+      navigate("/login/buyer");
+      return;
+    }
+
+    try {
+      const res = await api.post("/requests", {
+        consumerId: userId,
+        productId: id,
+      });
+
+      toast.success("Request sent!");
+
+      // OPTIONAL: auto open chat
+      const conversation = res.data;
+      if (conversation?.id) {
+        navigate(`/chat/${conversation.id}`);
       }
-
-    } catch (error) {
-      const errorMsg = error.response?.data?.message || error.response?.data || error.message;
-      console.error("API error:", errorMsg);
-      alert(String(errorMsg));
+    } catch (err) {
+      toast.error("Request failed");
     }
   };
 
   if (loading) return <div className="container mt-5">Loading...</div>;
-  if (!product) return <div className="container mt-5">Product not found</div>;
+  if (!product) return <div>Product not found</div>;
 
   return (
     <div className="container mt-5">
       <div className="row">
+
         <div className="col-md-6">
-          {product.imagePath && (
-            <img
-              src={`http://localhost:8080/api/files/${product.imagePath}`}
-              alt={product.title}
-              className="img-fluid rounded"
-              style={{ maxHeight: '400px', width: '100%', objectFit: 'cover' }}
-            />
-          )}
+          <img
+            src={`http://localhost:8080/api/products/image/${product.image}`}
+            className="img-fluid"
+            alt={product.name}
+          />
         </div>
+
         <div className="col-md-6">
-          <h2>{product.title}</h2>
-          <p className="lead">{product.description}</p>
-          <h4 className="mt-3">₹{product.price}</h4>
-          <p>Available Quantity: {product.quantity}</p>
+          <h2>{product.name}</h2>
+          <h4>₹{product.price}</h4>
 
-          <div className="mb-3">
-            <label className="form-label">Quantity:</label>
-            <input
-              type="number"
-              className="form-control"
-              min="1"
-              max={product.quantity}
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-              style={{ width: '100px' }}
-            />
-          </div>
-
-          <div className="d-grid gap-2">
-            {userType === 'consumer' && (
-              <>
-                <div className="row mb-3">
-                  <div className="col">
-                    <button className="btn btn-outline-primary w-100" onClick={handleAddToWishlist}>
-                      <i className="bi bi-heart"></i> Add to Wishlist
-                    </button>
-                  </div>
-                  <div className="col">
-                    <button className="btn btn-primary w-100" onClick={handleAddToCart}>
-                      <i className="bi bi-cart-plus"></i> Add to Cart
-                    </button>
-                  </div>
-                </div>
-
-                <button 
-                  className="btn btn-success w-100 mb-2" 
-                  onClick={handleRequest}
-                >
-                  <i className="bi bi-chat-dots"></i> Request Product & Chat with Seller
-                </button>
-
-                {product.seller && (
-                  <button 
-                    className="btn btn-outline-secondary w-100"
-                    onClick={() => navigate(`/chat/${userId}/${product.seller.id}`)}
-                  >
-                    <i className="bi bi-chat"></i> Chat with Seller
-                  </button>
-                )}
-              </>
-            )}
-            {!userType && (
-              <button className="btn btn-primary" onClick={() => navigate('/login/buyer')}>
-                Login to Purchase
+          {userType === "buyer" && (
+            <>
+              <button className="btn btn-primary w-100 mb-2" onClick={handleAddToCart}>
+                Add to Cart
               </button>
-            )}
-          </div>
+
+              <button className="btn btn-outline-secondary w-100 mb-2" onClick={handleAddToWishlist}>
+                Wishlist
+              </button>
+
+              <button className="btn btn-success w-100 mb-2" onClick={handleRequest}>
+                Request Product
+              </button>
+
+              <button className="btn btn-dark w-100" onClick={startChat}>
+                Chat with Seller
+              </button>
+            </>
+          )}
+
+          {!userType && (
+            <button className="btn btn-primary w-100" onClick={() => navigate("/login/buyer")}>
+              Login to Buy
+            </button>
+          )}
         </div>
       </div>
     </div>

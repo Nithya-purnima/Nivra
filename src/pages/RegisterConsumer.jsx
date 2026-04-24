@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "react-toastify";
 import api from "../api/api";
 import { validatePassword, validatePhone, validateEmail } from "../utils/validation";
 
@@ -11,7 +12,7 @@ export default function RegisterConsumer() {
     password: "", 
     certificate: null 
   });
-
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({
     password: "",
     phone: "",
@@ -43,11 +44,13 @@ export default function RegisterConsumer() {
       if (files && files[0]) {
         const file = files[0];
         const allowedTypes = ["image/jpeg", "image/png"];
+
         if (!allowedTypes.includes(file.type)) {
-          alert("Only JPG or PNG files are allowed for certificate");
-          e.target.value = ""; // Reset file input
+          toast.error("Only JPG or PNG files are allowed for certificate");
+          e.target.value = "";
           return;
         }
+
         setForm(prev => ({ ...prev, certificate: file }));
       }
       return;
@@ -55,8 +58,8 @@ export default function RegisterConsumer() {
 
     setForm(prev => ({ ...prev, [name]: value }));
 
-    // Validate fields on change
-    switch(name) {
+    // Validation
+    switch (name) {
       case "password":
         setErrors(prev => ({ ...prev, password: validatePassword(value) }));
         break;
@@ -71,7 +74,7 @@ export default function RegisterConsumer() {
     }
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const validationErrors = {
@@ -85,7 +88,7 @@ export default function RegisterConsumer() {
     if (Object.values(validationErrors).some(error => error !== "")) return;
 
     if (!form.certificate) {
-      alert("Please upload a certificate (JPG or PNG).");
+      toast.error("Please upload a certificate (JPG or PNG).");
       return;
     }
 
@@ -98,20 +101,33 @@ export default function RegisterConsumer() {
     data.append("certificate", form.certificate);
 
     try {
-      await api.post("/register/consumer", data, {
-        headers: { "Content-Type": "multipart/form-data" }
+      // ✅ FIXED: removed manual headers
+      await api.post("/register/consumer", data);
+
+      toast.success("Consumer registered successfully!");
+
+      setForm({
+        name: "",
+        email: "",
+        phone: "",
+        address: "",
+        password: "",
+        certificate: null
       });
-      alert("Consumer registered successfully!");
-      setForm({ name: "", email: "", phone: "", address: "", password: "", certificate: null });
-    } catch(err) {
-      alert(err.response?.data?.message || "Registration failed. Please try again.");
+
+    } catch (err) {
+      console.error("Registration error:", err.response?.data || err.message);
+
+      toast.error(err.response?.data?.message || "Registration failed. Please try again.");
     }
   };
 
   return (
     <div style={containerStyle}>
       <form onSubmit={handleSubmit} style={formStyle}>
-        <h2 style={{ marginBottom: '2rem', color: '#333', textAlign: 'center' }}>Consumer Registration</h2>
+        <h2 style={{ marginBottom: '2rem', color: '#333', textAlign: 'center' }}>
+          Consumer Registration
+        </h2>
 
         <div className="mb-4">
           <input 
@@ -122,7 +138,6 @@ export default function RegisterConsumer() {
             value={form.name}
             onChange={handleChange} 
             required
-            style={{ padding: '12px', fontSize: '1rem', borderRadius: '8px' }}
           />
         </div>
 
@@ -135,27 +150,38 @@ export default function RegisterConsumer() {
             value={form.email}
             onChange={handleChange} 
             required
-            style={{ padding: '12px', fontSize: '1rem', borderRadius: '8px' }}
           />
-          {errors.email && <div className="invalid-feedback" style={{ marginLeft: '8px', marginTop: '4px' }}>{errors.email}</div>}
+          {errors.email && <div className="invalid-feedback">{errors.email}</div>}
         </div>
 
-        <div className="mb-4">
+        <div className="mb-4" style={{ position: "relative" }}>
           <input 
-            type="password" 
+            type={showPassword ? "text" : "password"}
             name="password" 
             className={`form-control ${errors.password ? 'is-invalid' : ''}`}
             placeholder="Password" 
             value={form.password}
             onChange={handleChange} 
             required
-            style={{ padding: '12px', fontSize: '1rem', borderRadius: '8px' }}
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            style={{
+              position: "absolute",
+              right: "12px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#666",
+              fontSize: "18px"
+            }}
+          >
+            <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
+          </button>
           {errors.password && <div className="invalid-feedback">{errors.password}</div>}
-          <small className="form-text text-muted">
-            Password must contain at least 8 characters, one uppercase letter, one lowercase letter, 
-            one number, and one special character (@$!%*?&)
-          </small>
         </div>
 
         <div className="mb-3">
@@ -193,23 +219,12 @@ export default function RegisterConsumer() {
             accept=".jpg,.jpeg,.png"
             required
           />
-          <small className="form-text text-muted">
-            Accepted file types: JPG, JPEG, PNG
-          </small>
         </div>
 
         <button 
           type="submit" 
           className="btn btn-primary w-100"
           disabled={Object.values(errors).some(error => error !== "")}
-          style={{
-            padding: '12px',
-            fontSize: '1rem',
-            borderRadius: '8px',
-            backgroundColor: '#008080',
-            border: 'none',
-            marginTop: '1rem'
-          }}
         >
           Register
         </button>

@@ -1,127 +1,143 @@
-import { useEffect, useState } from "react";
-import api from "../api/api";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState([]);
-
-  const userId = localStorage.getItem('userId');
+  const [cart, setCart] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchCart = async () => {
-      try {
-        const response = await api.get(`/cart?userId=${userId}`);
-        setCartItems(response.data);
-      } catch (err) {
-        console.error(err);
-        alert("Failed to fetch cart items");
-      }
-    };
+    const saved = localStorage.getItem("cart");
+    setCart(saved ? JSON.parse(saved) : []);
+  }, []);
 
-    if (userId) {
-      fetchCart();
-    }
-  }, [userId]);
+  const saveCart = (updated) => {
+    setCart(updated);
+    localStorage.setItem("cart", JSON.stringify(updated));
+  };
 
-  const removeFromCart = async (productId) => {
-  try {
-    await api.delete(`/cart/remove/${productId}?userId=${userId}`);
-    setCartItems(cartItems.filter(item => item.product.id !== productId));
-    alert("Product removed from cart");
-  } catch (err) {
-    console.error(err);
-    alert("Failed to remove product from cart");
-  }
-};
-
-  const updateQuantity = async (cartItemId, productId, currentQuantity, delta) => {
-    const newQuantity = currentQuantity + delta;
-    if (newQuantity < 1) return;
-    
-    try {
-      await api.put(`/cart/update/${productId}?userId=${userId}&quantity=${newQuantity}`);
-      setCartItems(cartItems.map(item => 
-        item.id === cartItemId 
-          ? { ...item, quantity: newQuantity }
+  const handleIncrease = (productId) => {
+    saveCart(
+      cart.map((item) =>
+        item.productId === productId
+          ? { ...item, quantity: item.quantity + 1 }
           : item
-      ));
-    } catch (err) {
-      console.error(err);
-      alert("Failed to update quantity");
+      )
+    );
+  };
+
+  const handleDecrease = (productId) => {
+    saveCart(
+      cart.map((item) =>
+        item.productId === productId && item.quantity > 1
+          ? { ...item, quantity: item.quantity - 1 }
+          : item
+      )
+    );
+  };
+
+  const handleRemove = (productId) => {
+    saveCart(cart.filter((item) => item.productId !== productId));
+  };
+
+  const handleClearCart = () => {
+    if (window.confirm("Clear entire cart?")) {
+      saveCart([]);
     }
   };
 
-  const calculateTotal = () => {
-    return cartItems.reduce((total, item) => total + (item.product.price * item.quantity), 0);
-  };
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  if (cart.length === 0) {
+    return (
+      <div className="container mt-5 text-center">
+        <h4>Your cart is empty.</h4>
+        <button
+          className="btn mt-3"
+          style={{ backgroundColor: "#008080", color: "#fff", border: "none" }}
+          onClick={() => navigate("/products")}
+        >
+          Browse Products
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mt-4">
-      <h2 className="mb-4">My Shopping Cart</h2>
-      {cartItems.length === 0 ? (
-        <p>Your cart is empty</p>
-      ) : (
-        <>
-          <div className="row">
-            {cartItems.map((item) => (
-              <div className="col-12 mb-3" key={item.id}>
-                <div className="card">
-                  <div className="row g-0">
-                    <div className="col-md-3">
-                      <img
-                        src={`http://localhost:8080/api/files/${item.product.imagePath}`}
-                        className="img-fluid rounded-start"
-                        alt={item.product.name}
-                        style={{ height: "200px", objectFit: "cover" }}
-                      />
-                    </div>
-                    <div className="col-md-9">
-                      <div className="card-body">
-                        <h5 className="card-title">{item.product.name}</h5>
-                        <p className="card-text">{item.product.description}</p>
-                        <div className="d-flex justify-content-between align-items-center">
-                          <div>
-                            <p className="card-text mb-0">
-                              <strong>Price: </strong>₹{item.product.price}
-                            </p>
-                            <div className="d-flex align-items-center gap-2 mt-2">
-                              
-                              
-                              <span><p>Quantity:</p>{item.quantity}</span>
-                              
-                            </div>
-                          </div>
-                          <div>
-                            <p className="card-text mb-0">
-                              <strong>Subtotal: </strong>₹{item.product.price * item.quantity}
-                            </p>
-                            <button
-                              className="btn btn-danger mt-2"
-                              onClick={() => removeFromCart(item.product.id)}
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+    <div className="container mt-5">
+      <h2 className="mb-4">Your Cart</h2>
+
+      <table className="table table-bordered align-middle">
+        <thead style={{ backgroundColor: "#008080", color: "#fff" }}>
+          <tr>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Subtotal</th>
+            <th>Remove</th>
+          </tr>
+        </thead>
+        <tbody>
+          {cart.map((item) => (
+            <tr key={item.productId}>
+              <td>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  {item.image && (
+                    <img
+                      src={`http://localhost:8080/api/products/image/${item.image}`}
+                      alt={item.name}
+                      style={{ width: "60px", height: "60px", objectFit: "cover", borderRadius: "6px" }}
+                    />
+                  )}
+                  <span>{item.name}</span>
                 </div>
-              </div>
-            ))}
-          </div>
-          <div className="card mt-3">
-            <div className="card-body">
-              <h5 className="card-title">Cart Summary</h5>
-              <p className="card-text">
-                <strong>Total Amount: </strong>₹{calculateTotal()}
-              </p>
-              <button className="btn btn-primary">
-                Proceed to Checkout
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+              </td>
+              <td>₹{item.price}</td>
+              <td>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <button
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={() => handleDecrease(item.productId)}
+                  >−</button>
+                  <span>{item.quantity}</span>
+                  <button
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={() => handleIncrease(item.productId)}
+                  >+</button>
+                </div>
+              </td>
+              <td>₹{(item.price * item.quantity).toFixed(2)}</td>
+              <td>
+                <button
+                  className="btn btn-sm btn-danger"
+                  onClick={() => handleRemove(item.productId)}
+                >
+                  <i className="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div style={{ textAlign: "right" }}>
+        <h5>Total: ₹{total.toFixed(2)}</h5>
+
+        <button
+          className="btn btn-outline-danger me-2"
+          onClick={handleClearCart}
+        >
+          Clear Cart
+        </button>
+
+        <button
+          className="btn"
+          style={{ backgroundColor: "#008080", color: "#fff", border: "none" }}
+          onClick={() => toast.info("Checkout coming soon!")}
+        >
+          Proceed to Checkout
+        </button>
+      </div>
     </div>
   );
 }

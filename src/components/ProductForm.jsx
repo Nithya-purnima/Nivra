@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import api from "../api/api";
 import { useNavigate } from "react-router-dom";
 
+const CATEGORIES = ["Books", "Clothes", "Furniture", "Electronics", "Toys", "Other"];
+
 export default function ProductForm() {
   const [form, setForm] = useState({
-    title: "",       // changed from name to title to match backend
+    title: "",
     category: "",
     description: "",
     price: "",
@@ -17,8 +20,10 @@ export default function ProductForm() {
   useEffect(() => {
     const userId = localStorage.getItem("userId");
     const userType = localStorage.getItem("userType");
+
+    // ✅ FIX: match backend role (uppercase)
     if (!userId || userType !== "seller") {
-      alert("Please log in as seller to add products");
+      toast.warning("Please log in as seller to add products");
       navigate("/login/seller");
     }
   }, [navigate]);
@@ -33,32 +38,44 @@ export default function ProductForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const sellerId = localStorage.getItem("userId");
     if (!sellerId) {
-      alert("Seller not logged in!");
+      toast.error("Seller not logged in!");
       navigate("/login/seller");
       return;
     }
 
     const data = new FormData();
-    data.append("name", form.title);  // backend expects 'name' parameter but sets it as 'title'
+    data.append("name", form.title);
     data.append("category", form.category);
     data.append("description", form.description);
-    data.append("price", parseFloat(form.price));
-    data.append("quantity", parseInt(form.quantity));
+    data.append("price", Number(form.price));       // ✅ safer
+    data.append("quantity", Number(form.quantity)); // ✅ safer
     data.append("sellerId", sellerId);
-    if (form.image) data.append("image", form.image);
+
+    if (form.image) {
+      data.append("image", form.image);
+    }
 
     try {
-      const response = await api.post("/products", data, {
-        headers: { "Content-Type": "multipart/form-data" },
+      // ❌ DON'T set Content-Type manually
+      await api.post("/products", data);
+
+      toast.success("Product added successfully!");
+
+      setForm({
+        title: "",
+        category: "",
+        description: "",
+        price: "",
+        quantity: "",
+        image: null
       });
 
-      alert(response.data || "Product added successfully!");
-      setForm({ title: "", category: "", description: "", price: "", quantity: "", image: null });
     } catch (err) {
-      console.error("Error details:", err.response?.data);
-      alert(err.response?.data || "Error adding product");
+      console.error("Error:", err.response?.data);
+      toast.error(err.response?.data?.message || "Error adding product");
     }
   };
 
@@ -68,37 +85,93 @@ export default function ProductForm() {
         <h2>Welcome, Seller!</h2>
         <p className="lead">Add your product details below</p>
       </div>
+
       <form onSubmit={handleSubmit} className="mt-3">
-        {/* inputs omitted here for brevity; keep same as your version */}
         <div className="mb-3">
-          <input type="text" name="title" className="form-control" placeholder="Product Title" value={form.title} onChange={handleChange} required />
+          <input
+            type="text"
+            name="title"
+            className="form-control"
+            placeholder="Product Title"
+            value={form.title}
+            onChange={handleChange}
+            required
+          />
         </div>
+
         <div className="mb-3">
-          <input type="text" name="category" className="form-control" placeholder="Product Category" value={form.category} onChange={handleChange} required />
+          <select
+            name="category"
+            className="form-control"
+            value={form.category}
+            onChange={handleChange}
+            required
+          >
+            <option value="">-- Select Category --</option>
+            {CATEGORIES.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
         </div>
+
         <div className="mb-3">
-          <textarea name="description" className="form-control" placeholder="Product Description" value={form.description} onChange={handleChange} required />
+          <textarea
+            name="description"
+            className="form-control"
+            placeholder="Product Description"
+            value={form.description}
+            onChange={handleChange}
+            required
+          />
         </div>
+
         <div className="mb-3">
-          <input type="number" name="price" className="form-control" placeholder="Price" value={form.price} onChange={handleChange} required />
+          <input
+            type="number"
+            name="price"
+            className="form-control"
+            placeholder="Price"
+            value={form.price}
+            onChange={handleChange}
+            min="0"
+            step="0.01"
+            required
+          />
         </div>
+
         <div className="mb-3">
-          <input type="number" name="quantity" className="form-control" placeholder="Quantity Available" value={form.quantity} onChange={handleChange} required />
+          <input
+            type="number"
+            name="quantity"
+            className="form-control"
+            placeholder="Quantity Available"
+            value={form.quantity}
+            onChange={handleChange}
+            min="0"
+            required
+          />
         </div>
+
         <div className="mb-3">
           <label className="form-label">Product Image</label>
-          <input type="file" name="image" className="form-control" onChange={handleChange} accept="image/*" />
+          <input
+            type="file"
+            name="image"
+            className="form-control"
+            onChange={handleChange}
+            accept="image/*"
+          />
         </div>
-        <button 
-          type="submit" 
+
+        <button
+          type="submit"
           className="btn btn-primary w-100"
           style={{
-            backgroundColor: '#008080',
-            border: 'none',
-            padding: '12px',
-            fontSize: '1rem',
-            borderRadius: '8px',
-            transition: 'background-color 0.2s ease'
+            backgroundColor: "#008080",
+            border: "none",
+            padding: "12px",
+            fontSize: "1rem",
+            borderRadius: "8px"
           }}
         >
           Add Product

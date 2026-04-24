@@ -3,24 +3,24 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../api/api";
 
-export default function SellerChats() {
+export default function BuyerChats() {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
-  const sellerId = localStorage.getItem("userId");
+  const buyerId = localStorage.getItem("userId");
 
   useEffect(() => {
-    if (!sellerId) {
-      navigate("/login/seller");
+    if (!buyerId) {
+      navigate("/login/buyer");
       return;
     }
     fetchConversations();
-  }, [sellerId, navigate]);
+  }, [buyerId, navigate]);
 
   const fetchConversations = async () => {
     try {
-      const res = await api.get(`/conversation/seller/${sellerId}`);
+      const res = await api.get(`/conversation/buyer/${buyerId}`);
       setConversations(res.data || []);
     } catch (err) {
       console.error(err);
@@ -45,22 +45,16 @@ export default function SellerChats() {
           >
             <div>
               <h6 className="mb-1">
-                {conv.buyerName || `Buyer #${conv.buyerId}`}
-                <span className="badge bg-primary ms-2" style={{ fontSize: "0.68rem" }}>
-                  Buyer
+                {conv.sellerName || `Seller #${conv.sellerId}`}
+                <span className="badge bg-success ms-2" style={{ fontSize: "0.68rem" }}>
+                  Seller
                 </span>
               </h6>
-              <div>
-                 <small className="text-muted d-block">
-                 Product: {conv.productName}
-                </small>
-
-                <small className="text-muted">
+              <small className="text-muted">
                 {conv.lastMessage || "No messages yet"}
-                </small>
-              </div>
+              </small>
             </div>
-            <span className="btn btn-outline-primary btn-sm">Open →</span>
+            <span className="btn btn-outline-success btn-sm">Open →</span>
           </button>
         ))}
 

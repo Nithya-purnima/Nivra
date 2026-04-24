@@ -1,394 +1,443 @@
 import { Link, useNavigate } from "react-router-dom";
-import logo from '../assets/images/logo.png'; // Add your logo file here
+import { useEffect, useState } from "react";
+import logo from "../assets/images/logo.png";
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const isLoggedIn = !!localStorage.getItem("userId");
+  const isAdmin = !!localStorage.getItem("admin");
+  const userType = localStorage.getItem("userType");
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+      setSearchQuery("");
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/");
+  };
+
+  // Close all dropdowns
+  const closeAllMenus = () => {
+    const menus = ["registerMenu", "loginMenu"];
+    menus.forEach((id) => {
+      const menu = document.getElementById(id);
+      if (menu) menu.style.display = "none";
+    });
+  };
+
+  // dropdown handlers (simple fix for React safety)
+  const toggleMenu = (id) => {
+    closeAllMenus(); // Close all first
+    const menu = document.getElementById(id);
+    if (menu) {
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
+    }
+  };
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const navbars = document.querySelectorAll(".navbar-nav");
+      let clickedInsideNav = false;
+      navbars.forEach((nav) => {
+        if (nav.contains(event.target)) clickedInsideNav = true;
+      });
+      if (!clickedInsideNav) closeAllMenus();
+    };
+
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
   return (
-    <nav className="navbar navbar-expand-lg" style={{ 
-        background: "linear-gradient(90deg,#008080,#388e3c)", 
+    <nav
+      className="navbar navbar-expand-lg"
+      style={{
+        background: "linear-gradient(90deg,#008080,#388e3c)",
         color: "#fff",
         padding: "0.5rem 0",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-      }}>
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+      }}
+    >
       <div className="container">
+
+        {/* LEFT SIDE */}
         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-          <Link className="navbar-brand" to="/" style={{ 
-            color: "#fff", 
-            fontWeight: 700, 
-            fontSize: "26px",
-            letterSpacing: "0.5px",
-            margin: 0,
-            display: "flex",
-            alignItems: "center",
-            gap: "12px"
-          }}>
-            <img 
-              src={logo} 
-              alt="Nivra Logo" 
+          <Link
+            className="navbar-brand"
+            to="/"
+            style={{
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: "26px",
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              textDecoration: "none",
+            }}
+          >
+            <img
+              src={logo}
+              alt="Nivra Logo"
               style={{
                 width: "40px",
                 height: "40px",
                 borderRadius: "50%",
-                objectFit: "cover",
-                border: "2px solid #fff"
+                border: "2px solid #fff",
               }}
             />
-            Nivra</Link>
-          <Link to="/products" style={{ 
-            color: "#fff", 
-            textDecoration: "none", 
-            fontSize: "20px", 
-            fontWeight: "500",
-            borderRadius: "4px",
-            transition: "all 0.2s ease",
-            opacity: "0.9",
-            ":hover": {
-              opacity: "1"
-            }
-          }}>
+            Nivra
+          </Link>
+
+          <Link
+            to="/products"
+            style={{
+              color: "#fff",
+              textDecoration: "none",
+              fontSize: "20px",
+              fontWeight: "500",
+              opacity: 0.9,
+            }}
+          >
             Products
           </Link>
         </div>
 
-        <div className="collapse navbar-collapse" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          
-          {/* Search Bar */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1, justifyContent: "center" }}>
-            <input 
-              type="text" 
-              placeholder="Search products..." 
-              style={{ 
-                padding: "6px 16px", 
-                borderRadius: "4px", 
-                border: "1px solid white", 
-                width: "300px", 
-                color: "#fff", 
-                fontSize: "0.95rem",
-                "::placeholder": {
-                  color: "#fff"
-                }
-              }} 
-            />
-            <button style={{ 
-              border: "none", 
-              background: "transparent", 
-              width: "32px", 
-              height: "32px", 
-              fontSize: "1rem", 
-              color: "#fff", 
-              cursor: "pointer",
+        {/* CENTER SEARCH */}
+        <div
+          className="collapse navbar-collapse"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div
+            style={{
               display: "flex",
               alignItems: "center",
+              gap: "12px",
+              flex: 1,
               justifyContent: "center",
-              opacity: "0.8",
-              transition: "opacity 0.2s ease"
-            }}>
-              <i className="bi bi-search"></i>
-            </button>
+            }}
+          >
+            <form onSubmit={handleSearch} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  padding: "6px 16px",
+                  borderRadius: "4px",
+                  border: "1px solid white",
+                  width: "300px",
+                  fontSize: "14px"
+                }}
+              />
+              <button 
+                type="submit"
+                style={{ border: "none", background: "transparent", color: "#fff", cursor: "pointer" }}>
+                <i className="bi bi-search"></i>
+              </button>
+            </form>
           </div>
-          <ul className="navbar-nav ms-auto" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            {/* Register Dropdown */}
-            <li className="nav-item dropdown" style={{ position: "relative" }}>
-              <a
-                className="nav-link dropdown-toggle"
-                href="#"
-                id="registerDropdown"
-                role="button"
-                style={{ 
-                  background: "rgba(230, 244, 234, 0.95)",
-                  color: "#008080",
-                  fontWeight: "600",
-                  borderRadius: "20px",
-                  padding: "8px 20px",
-                  fontSize: "0.95rem",
-                  border: "1px solid #008080",
-                  boxShadow: "none",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  textDecoration: "none",
-                  height: "36px",
-                  transition: "all 0.2s ease",
-                  marginRight: "4px"
-                }}
-                onClick={e => {
-                  e.preventDefault();
-                  const menu = document.getElementById("navbarRegisterDropdownMenu");
-                  if (menu) menu.style.display = menu.style.display === "block" ? "none" : "block";
-                }}
-                aria-expanded="false"
-              >
-                <i className="bi bi-person-plus" style={{ fontSize: "1rem" }}></i>
-                <span>Register</span>
-              </a>
-              <ul
-                className="dropdown-menu"
-                id="navbarRegisterDropdownMenu"
-                aria-labelledby="registerDropdown"
-                style={{
-                  display: "none",
-                  position: "absolute",
-                  top: "44px",
-                  left: 0,
-                  background: "rgba(255, 255, 255, 0.98)",
-                  borderRadius: "16px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                  minWidth: "180px",
-                  zIndex: 1000,
-                  padding: "8px",
-                  listStyle: "none",
-                  border: "1px solid rgba(0,0,0,0.08)"
-                }}
-              >
-                <li>
-                  <a className="dropdown-item" href="#" 
-                    style={{ 
-                      color: "#008080", 
-                      padding: "10px 16px",
-                      fontSize: "0.95rem",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      transition: "all 0.2s ease",
-                      borderRadius: "12px",
-                      margin: "2px 0",
-                      "&:hover": {
-                        background: "rgba(0,128,128,0.08)"
-                      }
-                    }} 
-                    onClick={e => {
-                      e.preventDefault(); 
-                      navigate("/register/consumer"); 
-                      document.getElementById("navbarRegisterDropdownMenu").style.display = "none";
-                    }}>
-                    <i className="bi bi-person"></i>
-                    Consumer
-                  </a>
-                </li>
-                <li>
-                  <a className="dropdown-item" href="#" 
-                    style={{ 
-                      color: "#008080", 
-                      padding: "10px 16px",
-                      fontSize: "0.95rem",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      transition: "all 0.2s ease",
-                      borderRadius: "12px",
-                      margin: "2px 0",
-                      "&:hover": {
-                        background: "rgba(56,142,60,0.08)"
-                      }
-                    }} 
-                    onClick={e => {
-                      e.preventDefault(); 
-                      navigate("/register/ngo"); 
-                      document.getElementById("navbarRegisterDropdownMenu").style.display = "none";
-                    }}>
-                    <i className="bi bi-building"></i>
-                    NGO
-                  </a>
-                </li>
-                <li>
-                  <a className="dropdown-item" href="#" 
-                    style={{ 
-                      color: "#008080", 
-                      padding: "8px 16px",
-                      fontSize: "0.95rem",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      transition: "background-color 0.2s ease"
-                    }} 
-                    onClick={e => {
-                      e.preventDefault(); 
-                      navigate("/register/seller"); 
-                      document.getElementById("navbarRegisterDropdownMenu").style.display = "none";
-                    }}>
-                    <i className="bi bi-shop"></i>
-                    Seller
-                  </a>
-                </li>
-              </ul>
-            </li>
 
-            {/* Login Dropdown */}
-            <li className="nav-item dropdown" style={{ position: "relative" }}>
-              <a
-                className="nav-link dropdown-toggle"
-                href="#"
-                id="loginDropdown"
-                role="button"
-                style={{ 
-                  background: "rgba(230, 244, 234, 0.95)",
-                  color:"#008080",
-                  fontWeight: "600",
-                  borderRadius: "20px",
-                  padding: "8px 20px",
-                  fontSize: "0.95rem",
-                  border: "1px solid #008080",
-                  boxShadow: "none",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  textDecoration: "none",
-                  height: "36px",
-                  transition: "all 0.2s ease"
-                }}
-                onClick={e => {
-                  e.preventDefault();
-                  const menu = document.getElementById("navbarLoginDropdownMenu");
-                  if (menu) menu.style.display = menu.style.display === "block" ? "none" : "block";
-                }}
-                aria-expanded="false"
-              >
-                <i className="bi bi-box-arrow-in-right" style={{ fontSize: "1rem" }}></i>
-                <span>Login</span>
-              </a>
-              <ul
-                className="dropdown-menu"
-                id="navbarLoginDropdownMenu"
-                aria-labelledby="loginDropdown"
-                style={{
-                  display: "none",
-                  position: "absolute",
-                  top: "44px",
-                  left: 0,
-                  background: "rgba(255, 255, 255, 0.98)",
-                  borderRadius: "16px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                  minWidth: "180px",
-                  zIndex: 1000,
-                  padding: "8px",
-                  listStyle: "none",
-                  border: "1px solid rgba(0,0,0,0.08)"
-                }}
-              >
-                <li>
-                  <a className="dropdown-item" href="#" 
-                    style={{ 
-                      color: "#008080", 
-                      padding: "8px 16px",
-                      fontSize: "0.95rem",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      transition: "background-color 0.2s ease"
-                    }} 
-                    onClick={e => {
-                      e.preventDefault(); 
-                      navigate("/login/buyer"); 
-                      document.getElementById("navbarLoginDropdownMenu").style.display = "none";
-                    }}>
-                    <i className="bi bi-person"></i>
-                    Buyer
-                  </a>
-                </li>
-                <li>
-                  <a className="dropdown-item" href="#" 
-                    style={{ 
-                      color: "#008080", 
-                      padding: "8px 16px",
-                      fontSize: "0.95rem",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      transition: "background-color 0.2s ease"
-                    }} 
-                    onClick={e => {
-                      e.preventDefault(); 
-                      navigate("/login/seller"); 
-                      document.getElementById("navbarLoginDropdownMenu").style.display = "none";
-                    }}>
-                    <i className="bi bi-shop"></i>
-                    Seller
-                  </a>
-                </li>
-              </ul>
-            </li>
+          <ul
+            className="navbar-nav ms-auto"
+            style={{ display: "flex", alignItems: "center", gap: "10px" }}
+          >
 
-            {/* Show these links only if user is logged in as seller */}
-            {localStorage.getItem('userType') === 'seller' && (
+            {/* ================= NOT LOGGED IN ================= */}
+            {!isLoggedIn && !isAdmin && (
               <>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/products/new" style={{ 
-                    background: "rgba(230, 244, 234, 0.95)",
-                    color: "#008080",
-                    fontWeight: "600",
-                    borderRadius: "20px",
-                    padding: "8px 16px",
-                    fontSize: "0.95rem",
-                    border: "1px solid #008080",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    textDecoration: "none",
-                    marginRight: "8px",
-                    transition: "all 0.2s ease",
-                    height: "34px"
-                  }}>
-                    <i className="bi bi-plus-circle" style={{ fontSize: "1rem" }}></i>
-                    <span>Add Product</span>
+                {/* REGISTER */}
+                <li className="nav-item dropdown" style={{ position: "relative" }}>
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toggleMenu("registerMenu");
+                    }}
+                    style={{
+                      background: "#e6f4ea",
+                      color: "#008080",
+                      padding: "8px 20px",
+                      borderRadius: "20px",
+                      textDecoration: "none",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Register
+                  </a>
+
+                  <ul
+                    id="registerMenu"
+                    style={{
+                      display: "none",
+                      position: "absolute",
+                      top: "40px",
+                      background: "#fff",
+                      padding: "10px",
+                      borderRadius: "10px",
+                      listStyle: "none",
+                      minWidth: "150px",
+                      zIndex: 999,
+                      boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                    }}
+                  >
+                    <li style={{ padding: "8px 0" }}>
+                      <a onClick={() => { closeAllMenus(); navigate("/register/consumer"); }} style={{ color: "#333", cursor: "pointer", textDecoration: "none", display: "block", padding: "8px 12px", borderRadius: "4px" }} onMouseEnter={(e) => e.target.style.background = "#f0f0f0"} onMouseLeave={(e) => e.target.style.background = "transparent"}>Consumer</a>
+                    </li>
+                    <li style={{ padding: "8px 0" }}>
+                      <a onClick={() => { closeAllMenus(); navigate("/register/ngo"); }} style={{ color: "#333", cursor: "pointer", textDecoration: "none", display: "block", padding: "8px 12px", borderRadius: "4px" }} onMouseEnter={(e) => e.target.style.background = "#f0f0f0"} onMouseLeave={(e) => e.target.style.background = "transparent"}>NGO</a>
+                    </li>
+                    <li style={{ padding: "8px 0" }}>
+                      <a onClick={() => { closeAllMenus(); navigate("/register/seller"); }} style={{ color: "#333", cursor: "pointer", textDecoration: "none", display: "block", padding: "8px 12px", borderRadius: "4px" }} onMouseEnter={(e) => e.target.style.background = "#f0f0f0"} onMouseLeave={(e) => e.target.style.background = "transparent"}>Seller</a>
+                    </li>
+                  </ul>
+                </li>
+
+                {/* LOGIN */}
+                <li className="nav-item dropdown" style={{ position: "relative" }}>
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toggleMenu("loginMenu");
+                    }}
+                    style={{
+                      background: "#e6f4ea",
+                      color: "#008080",
+                      padding: "8px 20px",
+                      borderRadius: "20px",
+                      textDecoration: "none",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Login
+                  </a>
+
+                  <ul
+                    id="loginMenu"
+                    style={{
+                      display: "none",
+                      position: "absolute",
+                      top: "40px",
+                      background: "#fff",
+                      padding: "10px",
+                      borderRadius: "10px",
+                      listStyle: "none",
+                      minWidth: "150px",
+                      zIndex: 999,
+                      boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                    }}
+                  >
+                    <li style={{ padding: "8px 0" }}>
+                      <a onClick={() => { closeAllMenus(); navigate("/login/buyer"); }} style={{ color: "#333", cursor: "pointer", textDecoration: "none", display: "block", padding: "8px 12px", borderRadius: "4px" }} onMouseEnter={(e) => e.target.style.background = "#f0f0f0"} onMouseLeave={(e) => e.target.style.background = "transparent"}>Buyer</a>
+                    </li>
+                    <li style={{ padding: "8px 0" }}>
+                      <a onClick={() => { closeAllMenus(); navigate("/login/seller"); }} style={{ color: "#333", cursor: "pointer", textDecoration: "none", display: "block", padding: "8px 12px", borderRadius: "4px" }} onMouseEnter={(e) => e.target.style.background = "#f0f0f0"} onMouseLeave={(e) => e.target.style.background = "transparent"}>Seller</a>
+                    </li>
+                  </ul>
+                </li>
+              </>
+            )}
+
+            {/* ================= SELLER ================= */}
+            {isLoggedIn && userType === "seller" && (
+              <>
+                <li>
+                  <Link
+                    to="/products/new"
+                    style={{
+                      color: "#fff",
+                      textDecoration: "none",
+                      fontSize: "16px",
+                      fontWeight: "500",
+                      padding: "6px 12px",
+                      borderRadius: "15px",
+                      background: "rgba(255,255,255,0.1)",
+                      border: "1px solid rgba(255,255,255,0.2)",
+                      transition: "all 0.3s ease"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = "rgba(255,255,255,0.2)";
+                      e.target.style.border = "1px solid rgba(255,255,255,0.4)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = "rgba(255,255,255,0.1)";
+                      e.target.style.border = "1px solid rgba(255,255,255,0.2)";
+                    }}
+                  >
+                    Add Product
                   </Link>
                 </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/seller/requests" style={{ 
-                    background: "rgba(230, 244, 234, 0.95)",
-                    color: "#008080",
-                    fontWeight: "600",
-                    borderRadius: "20px",
-                    padding: "8px 16px",
-                    fontSize: "0.95rem",
-                    border: "1px solid #008080",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    textDecoration: "none",
-                    marginRight: "8px",
-                    transition: "all 0.2s ease",
-                    height: "34px"
-                  }}>
-                    <i className="bi bi-inbox" style={{ fontSize: "1rem" }}></i>
-                    <span>Requests</span>
+                <li>
+                  <Link
+                    to="/seller/requests"
+                    style={{
+                      color: "#fff",
+                      textDecoration: "none",
+                      fontSize: "16px",
+                      fontWeight: "500",
+                      padding: "6px 12px",
+                      borderRadius: "15px",
+                      background: "rgba(255,255,255,0.1)",
+                      border: "1px solid rgba(255,255,255,0.2)",
+                      transition: "all 0.3s ease"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = "rgba(255,255,255,0.2)";
+                      e.target.style.border = "1px solid rgba(255,255,255,0.4)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = "rgba(255,255,255,0.1)";
+                      e.target.style.border = "1px solid rgba(255,255,255,0.2)";
+                    }}
+                  >
+                    Requests
                   </Link>
                 </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/seller/chats" style={{ 
-                    background: "rgba(230, 244, 234, 0.95)",
-                    color: "#008080",
-                    fontWeight: "600",
-                    borderRadius: "20px",
-                    padding: "8px 16px",
-                    fontSize: "0.95rem",
-                    border: "1px solid #008080",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    textDecoration: "none",
-                    marginRight: "8px",
-                    transition: "all 0.2s ease",
-                    height: "34px"
-                  }}>
-                    <i className="bi bi-chat-dots" style={{ fontSize: "1rem" }}></i>
-                    <span>Chats</span>
+                <li>
+                  <Link
+                    to="/seller/chats"
+                    style={{
+                      color: "#fff",
+                      textDecoration: "none",
+                      fontSize: "16px",
+                      fontWeight: "500",
+                      padding: "6px 12px",
+                      borderRadius: "15px",
+                      background: "rgba(255,255,255,0.1)",
+                      border: "1px solid rgba(255,255,255,0.2)",
+                      transition: "all 0.3s ease"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = "rgba(255,255,255,0.2)";
+                      e.target.style.border = "1px solid rgba(255,255,255,0.4)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = "rgba(255,255,255,0.1)";
+                      e.target.style.border = "1px solid rgba(255,255,255,0.2)";
+                    }}
+                  >
+                    Chats
                   </Link>
                 </li>
               </>
             )}
 
-            {/* Show these links only if user is logged in */}
-            {localStorage.getItem('token') && localStorage.getItem('userType') !== 'seller' && (
+            {/* ================= BUYER ================= */}
+            {isLoggedIn && userType === "buyer" && (
               <>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/wishlist" style={{ background: "#e6f4ea", color: "#008080", fontWeight: 700, borderRadius: "20px", padding: "10px 28px", fontSize: "1.08rem", border: "2px solid #008080", boxShadow: "0 2px 8px rgba(0,128,128,0.12)", display: "inline-block", textDecoration: "none" }}>
-                    <i className="bi bi-heart"></i> Wishlist
+                <li>
+                  <Link
+                    to="/wishlist"
+                    style={{
+                      color: "#fff",
+                      textDecoration: "none",
+                      fontSize: "18px",
+                      fontWeight: "500",
+                      padding: "8px 16px",
+                      borderRadius: "20px",
+                      background: "rgba(255,255,255,0.1)",
+                      border: "1px solid rgba(255,255,255,0.3)",
+                      transition: "all 0.3s ease",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "8px"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = "rgba(255,255,255,0.2)";
+                      e.target.style.border = "1px solid rgba(255,255,255,0.5)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = "rgba(255,255,255,0.1)";
+                      e.target.style.border = "1px solid rgba(255,255,255,0.3)";
+                    }}
+                  >
+                    <i className="bi bi-heart-fill" style={{ color: "#ff6b6b" }}></i>
+                    Wishlist
                   </Link>
                 </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/cart" style={{ background: "#e6f4ea", color:"#008080" , fontWeight: 700, borderRadius: "20px", padding: "10px 28px", fontSize: "1.08rem", border: "2px solid #388e3c", boxShadow: "0 2px 8px rgba(56,142,60,0.12)", display: "inline-block", textDecoration: "none" }}>
-                    <i className="bi bi-cart"></i> Cart
+                <li>
+                  <Link
+                    to="/cart"
+                    style={{
+                      color: "#fff",
+                      textDecoration: "none",
+                      fontSize: "18px",
+                      fontWeight: "500",
+                      padding: "8px 16px",
+                      borderRadius: "20px",
+                      background: "rgba(255,255,255,0.1)",
+                      border: "1px solid rgba(255,255,255,0.3)",
+                      transition: "all 0.3s ease",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "8px"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = "rgba(255,255,255,0.2)";
+                      e.target.style.border = "1px solid rgba(255,255,255,0.5)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = "rgba(255,255,255,0.1)";
+                      e.target.style.border = "1px solid rgba(255,255,255,0.3)";
+                    }}
+                  >
+                    <i className="bi bi-cart-fill" style={{ color: "#ffd93d" }}></i>
+                    Cart
                   </Link>
+                </li>
+              </>
+            )}
+
+            {/* ================= USER + LOGOUT ================= */}
+            {(isLoggedIn || isAdmin) && (
+              <>
+                <li style={{
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  fontSize: "16px",
+                  fontWeight: "500"
+                }}>
+                  <i className="bi bi-person-circle" style={{ fontSize: "20px" }}></i>
+                  {localStorage.getItem("userName") || "User"}
+                </li>
+
+                <li>
+                  <button
+                    onClick={handleLogout}
+                    style={{
+                      background: "rgba(255,255,255,0.2)",
+                      border: "1px solid #fff",
+                      color: "#fff",
+                      padding: "6px 12px",
+                      borderRadius: "20px",
+                      cursor: "pointer",
+                      fontWeight: "500",
+                      transition: "all 0.3s ease"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = "rgba(255,255,255,0.3)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = "rgba(255,255,255,0.2)";
+                    }}
+                  >
+                    Logout
+                  </button>
                 </li>
               </>
             )}
