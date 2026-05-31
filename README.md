@@ -188,7 +188,12 @@ npm run dev
 
 ## Screenshots
 
-> *(Add screenshots of your UI here — seller dashboard, product listing, admin panel, chat screen)*
+
+![Landing Page](screenshots/landing-page.jpeg)
+![Chat Page](screenshots/chat.jpeg)
+![Admin Dashboard Page](screenshots/admin-dashboard.jpeg)
+![Products Page](screenshots/products.jpeg)
+![Register Page](screenshots/register.jpeg)
 
 ---
 
