@@ -34,7 +34,7 @@ export default function BuyerChats() {
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-4">My Conversations</h2>
+      <h2 className="mb-4">Chats</h2>
 
       <div className="list-group">
         {conversations.map((conv) => (

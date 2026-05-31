@@ -59,7 +59,7 @@ export default function ProductForm() {
     }
 
     try {
-      // ❌ DON'T set Content-Type manually
+      
       await api.post("/products", data);
 
       toast.success("Product added successfully!");

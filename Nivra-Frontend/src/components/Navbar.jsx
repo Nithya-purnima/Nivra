@@ -426,7 +426,7 @@ export default function Navbar() {
                     }}
                   >
                     <i className="bi bi-chat-dots-fill" style={{ color: "#87ceeb" }}></i>
-                    Conversations
+                    Chats
                   </Link>
                 </li>
               </>

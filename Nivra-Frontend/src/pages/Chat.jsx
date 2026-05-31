@@ -8,7 +8,7 @@ import api from "../api/api";
 export default function Chat() {
   const { conversationId } = useParams();
   const navigate = useNavigate();
-
+  
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
   const [connected, setConnected] = useState(false);
